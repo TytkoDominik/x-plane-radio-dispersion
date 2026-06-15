@@ -5,7 +5,7 @@ from xplane_udp import pack_rref_subscribe, pack_dref_set, parse_rref_response
 
 def run():
     print("Loading signal map…")
-    smap = SignalMap(config.SIGNAL_PNG, config.SIGNAL_KML)
+    smap = SignalMap(config.SIGNAL_PNG, config.SIGNAL_KML, config.SIGNAL_MIN, config.SIGNAL_MAX)
     print(f"Signal map loaded. Bounds: N{smap.north} S{smap.south} E{smap.east} W{smap.west}")
 
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)

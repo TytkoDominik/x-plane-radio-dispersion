@@ -4,9 +4,9 @@ import numpy as np
 from PIL import Image
 
 class SignalMap:
-    def __init__(self, png_path: str, kml_path: str):
+    def __init__(self, png_path: str, kml_path: str, signal_min: float = 0.01, signal_max: float = 1.0):
         self.north, self.south, self.east, self.west = self._parse_kml(kml_path)
-        self._grid = self._load_png(png_path)   # 2D float32 array [h, w]
+        self._grid = self._load_png(png_path, signal_min, signal_max)   # 2D float32 array [h, w]
         self._h, self._w = self._grid.shape
 
     def _parse_kml(self, path: str):
@@ -23,7 +23,7 @@ class SignalMap:
             return float(el.text.strip())
         return f("north"), f("south"), f("east"), f("west")
 
-    def _load_png(self, path: str) -> np.ndarray:
+    def _load_png(self, path: str, signal_min: float, signal_max: float) -> np.ndarray:
         img  = Image.open(path).convert("RGBA")
         arr  = np.array(img, dtype=np.float32)  # [h, w, 4]
         r, g, b, a = arr[...,0], arr[...,1], arr[...,2], arr[...,3]
@@ -41,9 +41,10 @@ class SignalMap:
         gb = m & (cmax == b)
         hue[gb] = 60 * ((r[gb] - g[gb]) / delta[gb] + 4)
 
-        # hue 0(red)→1.0, hue 240(blue)→0.01, transparent→0.0
+        # hue 0(red)→signal_max, hue 240(blue)→signal_min, transparent→0.0
         strength = np.where(a > 10,
-                            np.clip(0.01 + 0.99 * (1.0 - hue / 240.0), 0.01, 1.0),
+                            np.clip(signal_min + (signal_max - signal_min) * (1.0 - hue / 240.0),
+                                    signal_min, signal_max),
                             0.0)
         return strength.astype(np.float32)
 

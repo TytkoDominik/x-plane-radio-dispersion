@@ -14,3 +14,5 @@ DREF_SIGNAL = "sim/cockpit/radios/nav1_signal_quality_test"
 
 SIGNAL_PNG  = "VORSBG.png"
 SIGNAL_KML  = "VORSBG.kml"
+SIGNAL_MIN  = 0.01   # value sent for weakest signal (blue)
+SIGNAL_MAX  = 1.0    # value sent for strongest signal (red)
