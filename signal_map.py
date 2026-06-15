@@ -46,9 +46,9 @@ class SignalMap:
                             0.0)
         return strength.astype(np.float32)
 
-    def lookup(self, lon: float, lat: float) -> float:
+    def lookup(self, lon: float, lat: float) -> float | None:
         if not (self.west <= lon <= self.east and self.south <= lat <= self.north):
-            return 0.0
+            return None
         x = round((lon - self.west)  / (self.east  - self.west)  * (self._w - 1))
         y = round((self.north - lat) / (self.north - self.south) * (self._h - 1))
         x = max(0, min(x, self._w - 1))

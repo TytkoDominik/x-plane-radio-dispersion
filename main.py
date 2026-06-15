@@ -35,6 +35,8 @@ def run():
 
             if lat is not None and lon is not None:
                 strength = smap.lookup(lon=lon, lat=lat)
+                if strength is None:
+                    continue
                 if strength != last_strength:
                     sock.sendto(pack_dref_set(config.DREF_SIGNAL, strength), xplane)
                     last_strength = strength

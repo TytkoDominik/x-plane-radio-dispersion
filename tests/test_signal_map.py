@@ -19,8 +19,8 @@ def test_in_bounds_returns_float(smap):
     assert isinstance(strength, float)
     assert 0.0 <= strength <= 1.0
 
-def test_outside_bounds_returns_zero(smap):
-    assert smap.lookup(lon=0.0, lat=0.0) == 0.0
+def test_outside_bounds_returns_none(smap):
+    assert smap.lookup(lon=0.0, lat=0.0) is None
 
 def test_transparent_pixel_returns_zero(smap):
     strength = smap.lookup(lon=smap.west, lat=smap.north)
