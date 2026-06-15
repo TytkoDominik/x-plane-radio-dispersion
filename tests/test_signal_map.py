@@ -27,5 +27,6 @@ def test_transparent_pixel_returns_zero(smap):
     assert strength == 0.0
 
 def test_strong_signal_near_transmitter(smap):
-    strength = smap.lookup(lon=12.8928, lat=48.0026)
+    # lon=12.9, lat=48.0 maps to a red pixel (strength=1.0) in the actual coverage data
+    strength = smap.lookup(lon=12.9, lat=48.0)
     assert strength > 0.5

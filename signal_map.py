@@ -53,10 +53,4 @@ class SignalMap:
         y = round((self.north - lat) / (self.north - self.south) * (self._h - 1))
         x = max(0, min(x, self._w - 1))
         y = max(0, min(y, self._h - 1))
-        # Take max in a small neighborhood to handle isolated background pixels
-        radius = 5
-        y1 = max(0, y - radius)
-        y2 = min(self._h, y + radius + 1)
-        x1 = max(0, x - radius)
-        x2 = min(self._w, x + radius + 1)
-        return float(self._grid[y1:y2, x1:x2].max())
+        return float(self._grid[y, x])
