@@ -8,17 +8,22 @@ def send_dref(sock, xplane, dataref: str, value: float) -> None:
 
 
 def apply_nav1_state(sock, xplane, strength, nav1_fromto_raw) -> str:
-    """Toggle override and drive Nav1 needle based on signal strength."""
-    if strength is None or strength < config.SIGNAL_THRESHOLD:
-        # Take control — X-Plane must not overwrite our 0
-        send_dref(sock, xplane, config.DREF_OVERRIDE_NAV, 1.0)
+    """Drive Nav1 needle based on signal strength. Override held inside map bounds."""
+    if strength is None:
+        # Outside map — release control entirely
+        send_dref(sock, xplane, config.DREF_OVERRIDE_NAV, 0.0)
+        return "OUT OF BOUNDS"
+    # Inside map — keep override so X-Plane can't overwrite our values
+    send_dref(sock, xplane, config.DREF_OVERRIDE_NAV, 1.0)
+    if strength < config.SIGNAL_THRESHOLD:
         send_dref(sock, xplane, config.DREF_NAV1_FROMTO, 0.0)    # flagged
         send_dref(sock, xplane, config.DREF_NAV1_FLAG_GS, 1.0)   # GS flagged
         send_dref(sock, xplane, config.DREF_NAV1_HDEF, 0.0)
         return "NO SIGNAL"
     else:
-        # Release control — X-Plane computes FROM/TO geometrically
-        send_dref(sock, xplane, config.DREF_OVERRIDE_NAV, 0.0)
+        send_dref(sock, xplane, config.DREF_NAV1_FROMTO, nav1_fromto_raw)
+        send_dref(sock, xplane, config.DREF_NAV1_FLAG_GS, 0.0)   # GS valid
+        send_dref(sock, xplane, config.DREF_NAV1_HDEF, 0.0)
         return f"signal={strength:.4f} nav1_fromto={int(nav1_fromto_raw)}"
 
 
@@ -42,7 +47,6 @@ def run():
         lat = lon = None
         nav1_fromto_raw = 0.0
         last_strength = None
-        last_nav1_fromto = None
 
         while True:
             try:
@@ -57,9 +61,6 @@ def run():
                     lon = value
                 elif index == config.IDX_NAV1_FROMTO:
                     nav1_fromto_raw = value
-                    if nav1_fromto_raw != last_nav1_fromto:
-                        print(f"nav1_fromto={int(nav1_fromto_raw)}")
-                        last_nav1_fromto = nav1_fromto_raw
 
             if lat is not None and lon is not None:
                 strength = smap.lookup(lon=lon, lat=lat)
