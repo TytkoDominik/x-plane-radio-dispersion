@@ -42,6 +42,7 @@ def run():
         lat = lon = None
         nav1_fromto_raw = 0.0
         last_strength = None
+        last_nav1_fromto = None
 
         while True:
             try:
@@ -56,6 +57,9 @@ def run():
                     lon = value
                 elif index == config.IDX_NAV1_FROMTO:
                     nav1_fromto_raw = value
+                    if nav1_fromto_raw != last_nav1_fromto:
+                        print(f"nav1_fromto={int(nav1_fromto_raw)}")
+                        last_nav1_fromto = nav1_fromto_raw
 
             if lat is not None and lon is not None:
                 strength = smap.lookup(lon=lon, lat=lat)
