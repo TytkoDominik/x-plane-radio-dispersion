@@ -47,6 +47,7 @@ def run():
         lat = lon = None
         nav1_fromto_raw = 0.0
         last_strength = None
+        last_nav1_fromto_raw = None
 
         while True:
             try:
@@ -64,9 +65,10 @@ def run():
 
             if lat is not None and lon is not None:
                 strength = smap.lookup(lon=lon, lat=lat)
-                if strength != last_strength:
+                if strength != last_strength or nav1_fromto_raw != last_nav1_fromto_raw:
                     label = apply_nav1_state(sock, xplane, strength, nav1_fromto_raw)
                     last_strength = strength
+                    last_nav1_fromto_raw = nav1_fromto_raw
                     print(f"lat={lat:.4f} lon={lon:.4f}  {label}")
     finally:
         # Release nav override on exit
