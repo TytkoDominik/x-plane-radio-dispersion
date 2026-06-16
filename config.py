@@ -10,7 +10,17 @@ IDX_LON = 1
 
 DREF_LAT    = "sim/flightmodel/position/latitude"
 DREF_LON    = "sim/flightmodel/position/longitude"
-DREF_SIGNAL = "sim/cockpit/radios/nav1_signal_quality_test"
+
+# Nav needle override — must be 1.0 before writing nav1 needle datarefs
+DREF_OVERRIDE_NAV   = "sim/operation/override/override_navneedles"
+
+# Nav1 needle datarefs (writable only when override_navneedles=1)
+DREF_NAV1_FROMTO    = "sim/cockpit/radios/nav1_fromto"         # 0=flag, 1=TO, 2=FROM
+DREF_NAV1_FLAG_GS   = "sim/cockpit/radios/nav1_flag_glideslope"  # 1=flagged (no GS)
+DREF_NAV1_HDEF      = "sim/cockpit/radios/nav1_hdef_dots"      # CDI deflection in dots
+
+# Signal strength below this → treat as no signal
+SIGNAL_THRESHOLD = 0.15
 
 SIGNAL_PNG  = "VORSBG.png"
 SIGNAL_KML  = "VORSBG.kml"

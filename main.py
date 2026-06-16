@@ -3,6 +3,24 @@ import config
 from signal_map import SignalMap
 from xplane_udp import pack_rref_subscribe, pack_dref_set, parse_rref_response
 
+def send_dref(sock, xplane, dataref: str, value: float) -> None:
+    sock.sendto(pack_dref_set(dataref, value), xplane)
+
+
+def apply_nav1_state(sock, xplane, strength) -> str:
+    """Map signal strength (0–1 or None) to Nav1 needle state. Returns label for logging."""
+    if strength is None or strength < config.SIGNAL_THRESHOLD:
+        send_dref(sock, xplane, config.DREF_NAV1_FROMTO, 0.0)    # flagged
+        send_dref(sock, xplane, config.DREF_NAV1_FLAG_GS, 1.0)   # GS flagged
+        send_dref(sock, xplane, config.DREF_NAV1_HDEF, 0.0)
+        return "NO SIGNAL"
+    else:
+        send_dref(sock, xplane, config.DREF_NAV1_FROMTO, 1.0)    # TO
+        send_dref(sock, xplane, config.DREF_NAV1_FLAG_GS, 0.0)   # GS valid
+        send_dref(sock, xplane, config.DREF_NAV1_HDEF, 0.0)      # centered
+        return f"signal={strength:.4f}"
+
+
 def run():
     print("Loading signal map…")
     smap = SignalMap(config.SIGNAL_PNG, config.SIGNAL_KML, config.SIGNAL_MIN, config.SIGNAL_MAX)
@@ -14,6 +32,11 @@ def run():
         sock.settimeout(1.0)
 
         xplane = (config.XPLANE_IP, config.XPLANE_PORT)
+
+        # Take control of nav needles before writing any nav1 datarefs
+        send_dref(sock, xplane, config.DREF_OVERRIDE_NAV, 1.0)
+        print("Nav needle override active.")
+
         sock.sendto(pack_rref_subscribe(config.IDX_LAT, config.DREF_LAT, config.RREF_FREQ), xplane)
         sock.sendto(pack_rref_subscribe(config.IDX_LON, config.DREF_LON, config.RREF_FREQ), xplane)
         print(f"Subscribed to position datarefs at {config.RREF_FREQ} Hz. Listening on port {config.LISTEN_PORT}…")
@@ -35,13 +58,13 @@ def run():
 
             if lat is not None and lon is not None:
                 strength = smap.lookup(lon=lon, lat=lat)
-                if strength is None:
-                    continue
                 if strength != last_strength:
-                    sock.sendto(pack_dref_set(config.DREF_SIGNAL, strength), xplane)
+                    label = apply_nav1_state(sock, xplane, strength)
                     last_strength = strength
-                print(f"lat={lat:.4f} lon={lon:.4f}  signal={strength:.4f}")
+                    print(f"lat={lat:.4f} lon={lon:.4f}  {label}")
     finally:
+        # Release nav override on exit
+        send_dref(sock, xplane, config.DREF_OVERRIDE_NAV, 0.0)
         sock.close()
 
 if __name__ == "__main__":
