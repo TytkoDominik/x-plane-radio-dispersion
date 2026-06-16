@@ -48,6 +48,14 @@ class SignalMap:
                             0.0)
         return strength.astype(np.float32)
 
+    def peak_location(self) -> tuple[float, float]:
+        """Return (lat, lon) of the pixel with the strongest signal — the transmitter."""
+        idx = int(np.argmax(self._grid))
+        y, x = divmod(idx, self._w)
+        lat = self.north - y / (self._h - 1) * (self.north - self.south)
+        lon = self.west  + x / (self._w - 1) * (self.east  - self.west)
+        return lat, lon
+
     def lookup(self, lon: float, lat: float) -> float | None:
         if not (self.west <= lon <= self.east and self.south <= lat <= self.north):
             return None
