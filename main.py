@@ -61,6 +61,8 @@ def run():
                 elif index == config.IDX_LON:
                     lon = value
                 elif index == config.IDX_NAV1_FROMTO:
+                    if value != nav1_fromto_raw:
+                        print(f"[RREF] nav1_fromto raw={value}")
                     nav1_fromto_raw = value
 
             if lat is not None and lon is not None:
