@@ -26,6 +26,9 @@ DREF_NAV1_OBS       = "sim/cockpit/radios/nav1_obs_degm_pilot"    # degrees magn
 # Signal strength below this → treat as no signal
 SIGNAL_THRESHOLD = 0.15
 
+VOR_LAT = 48.0226
+VOR_LON = 12.8928
+
 SIGNAL_PNG  = "VORSBG.png"
 SIGNAL_KML  = "VORSBG.kml"
 SIGNAL_MIN  = 0.01   # value sent for weakest signal (blue)

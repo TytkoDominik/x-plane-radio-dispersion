@@ -41,9 +41,9 @@ def apply_nav1_state(sock, xplane, strength, fromto: int) -> str:
 def run():
     print("Loading signal map…")
     smap = SignalMap(config.SIGNAL_PNG, config.SIGNAL_KML, config.SIGNAL_MIN, config.SIGNAL_MAX)
-    vor_lat, vor_lon = smap.peak_location()
+    vor_lat, vor_lon = config.VOR_LAT, config.VOR_LON
     print(f"Signal map loaded. Bounds: N{smap.north} S{smap.south} E{smap.east} W{smap.west}")
-    print(f"VOR transmitter location (peak signal): lat={vor_lat:.5f} lon={vor_lon:.5f}")
+    print(f"VOR: lat={vor_lat} lon={vor_lon}")
 
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     try:
