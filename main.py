@@ -7,18 +7,19 @@ def send_dref(sock, xplane, dataref: str, value: float) -> None:
     sock.sendto(pack_dref_set(dataref, value), xplane)
 
 
-def apply_nav1_state(sock, xplane, strength) -> str:
-    """Map signal strength (0–1 or None) to Nav1 needle state. Returns label for logging."""
+def apply_nav1_state(sock, xplane, strength, nav1_fromto_raw) -> str:
+    """Toggle override and drive Nav1 needle based on signal strength."""
     if strength is None or strength < config.SIGNAL_THRESHOLD:
+        # Take control — X-Plane must not overwrite our 0
+        send_dref(sock, xplane, config.DREF_OVERRIDE_NAV, 1.0)
         send_dref(sock, xplane, config.DREF_NAV1_FROMTO, 0.0)    # flagged
         send_dref(sock, xplane, config.DREF_NAV1_FLAG_GS, 1.0)   # GS flagged
         send_dref(sock, xplane, config.DREF_NAV1_HDEF, 0.0)
         return "NO SIGNAL"
     else:
-        send_dref(sock, xplane, config.DREF_NAV1_FROMTO, 1.0)    # TO
-        send_dref(sock, xplane, config.DREF_NAV1_FLAG_GS, 0.0)   # GS valid
-        send_dref(sock, xplane, config.DREF_NAV1_HDEF, 0.0)      # centered
-        return f"signal={strength:.4f}"
+        # Release control — X-Plane computes FROM/TO geometrically
+        send_dref(sock, xplane, config.DREF_OVERRIDE_NAV, 0.0)
+        return f"signal={strength:.4f} nav1_fromto={int(nav1_fromto_raw)}"
 
 
 def run():
@@ -33,15 +34,13 @@ def run():
 
         xplane = (config.XPLANE_IP, config.XPLANE_PORT)
 
-        # Take control of nav needles before writing any nav1 datarefs
-        send_dref(sock, xplane, config.DREF_OVERRIDE_NAV, 1.0)
-        print("Nav needle override active.")
-
         sock.sendto(pack_rref_subscribe(config.IDX_LAT, config.DREF_LAT, config.RREF_FREQ), xplane)
         sock.sendto(pack_rref_subscribe(config.IDX_LON, config.DREF_LON, config.RREF_FREQ), xplane)
-        print(f"Subscribed to position datarefs at {config.RREF_FREQ} Hz. Listening on port {config.LISTEN_PORT}…")
+        sock.sendto(pack_rref_subscribe(config.IDX_NAV1_FROMTO, config.DREF_NAV1_FROMTO, config.RREF_FREQ), xplane)
+        print(f"Subscribed to position + nav1_fromto datarefs at {config.RREF_FREQ} Hz. Listening on port {config.LISTEN_PORT}…")
 
         lat = lon = None
+        nav1_fromto_raw = 0.0
         last_strength = None
 
         while True:
@@ -55,11 +54,13 @@ def run():
                     lat = value
                 elif index == config.IDX_LON:
                     lon = value
+                elif index == config.IDX_NAV1_FROMTO:
+                    nav1_fromto_raw = value
 
             if lat is not None and lon is not None:
                 strength = smap.lookup(lon=lon, lat=lat)
                 if strength != last_strength:
-                    label = apply_nav1_state(sock, xplane, strength)
+                    label = apply_nav1_state(sock, xplane, strength, nav1_fromto_raw)
                     last_strength = strength
                     print(f"lat={lat:.4f} lon={lon:.4f}  {label}")
     finally:

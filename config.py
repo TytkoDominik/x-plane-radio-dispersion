@@ -5,8 +5,9 @@ LISTEN_PORT = 49001      # port this service listens on for RREF responses
 RREF_FREQ   = 10         # position update rate in Hz
 
 # Dataref indices (arbitrary integers used to match RREF responses)
-IDX_LAT = 0
-IDX_LON = 1
+IDX_LAT          = 0
+IDX_LON          = 1
+IDX_NAV1_FROMTO  = 2
 
 DREF_LAT    = "sim/flightmodel/position/latitude"
 DREF_LON    = "sim/flightmodel/position/longitude"
